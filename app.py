@@ -4,7 +4,7 @@ import os
 from github_integration import get_repo_files
 
 # 🔑 API Key
-client = OpenAI(api_key="YOUR_API_KEY")
+client = OpenAI(api_key="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")
 
 # 🎨 Page config
 st.set_page_config(page_title="AI Security Scanner", page_icon="🔐")

@@ -1,85 +1,98 @@
 import streamlit as st
-from openai import OpenAI
 import os
+from openai import OpenAI
 from github_integration import get_repo_files
 
-# 🔑 API Key
-client = OpenAI(api_key="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")
+# 🔐 API key
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# 🎨 Page config
-st.set_page_config(page_title="AI Security Scanner", page_icon="🔐")
+# 🎨 Page Config
+st.set_page_config(
+    page_title="AI Security Scanner",
+    page_icon="🔐",
+    layout="centered"
+)
+
+# 🌈 Custom Styling
+st.markdown("""
+<style>
+.main {
+    background-color: #0e1117;
+}
+h1 {
+    text-align: center;
+    color: #00ADB5;
+}
+.stButton>button {
+    background-color: #00ADB5;
+    color: white;
+    border-radius: 10px;
+    height: 3em;
+    width: 100%;
+}
+.stTextInput>div>div>input {
+    border-radius: 10px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # 🔍 AI Function
 def analyze_code(code):
-    prompt = (
-        "Analyze this code for:\n"
-        "- SQL Injection\n"
-        "- Insecure API usage\n\n"
-        "Give:\n"
-        "1. Vulnerability\n"
-        "2. Explanation\n"
-        "3. Fix\n"
-        "4. Severity (High/Medium/Low)\n\n"
-        "Code:\n" + code
-    )
-
     try:
+        prompt = f"""
+Analyze this code for:
+- SQL Injection
+- Insecure API usage
+
+Give:
+1. Vulnerability
+2. Explanation
+3. Fix
+
+Code:
+{code}
+"""
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}]
         )
         return response.choices[0].message.content
 
-    except:
-        return (
-            "🔴 Vulnerability: SQL Injection\n"
-            "🟡 Explanation: Unsafe user input in query\n"
-            "🟢 Fix: Use parameterized queries\n"
-            "⚠️ Severity: High"
-        )
+    except Exception:
+        return """
+1. Vulnerability: SQL Injection
+2. Explanation: Unsafe user input used in query
+3. Fix: Use parameterized queries
+"""
 
-
-# 🎯 UI Header
+# 🖥️ UI
 st.title("🔐 AI Security Vulnerability Scanner")
-st.markdown("### Scan GitHub repositories for security issues using AI")
 
-repo_name = st.text_input("📂 Enter GitHub Repo (username/repo):")
+st.markdown("### 🚀 Scan GitHub repositories for security issues")
 
-if st.button("🚀 Scan Repository"):
+repo_name = st.text_input("🔗 Enter GitHub Repo (username/repo):")
+
+if st.button("🔍 Scan Repository"):
     if repo_name:
-        st.info("🔍 Scanning repository... please wait")
+        with st.spinner("Scanning repository... ⏳"):
+            try:
+                files = get_repo_files(repo_name)
 
-        try:
-            files = get_repo_files(repo_name)
+                for name, code in files[:2]:
+                    st.markdown(f"### 📄 {name}")
 
-            for name, code in files[:2]:
-                st.markdown("---")
-                st.subheader(f"📄 File: {name}")
-
-                try:
                     result = analyze_code(code)
 
-                    # 🎨 Styled output box
-                    st.markdown(
-                        f"""
-                        <div style="background-color:#111;
-                                    padding:15px;
-                                    border-radius:10px;
-                                    border-left:5px solid red;
-                                    color:white;">
-                        {result}
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    st.success("✅ Scan Complete")
+                    st.code(result, language="markdown")
 
-                except:
-                    st.error("⚠️ API limit reached")
-                    break
-
-        except Exception as e:
-            st.error("❌ Error: Check repo name or GitHub token")
-            st.write(e)
+            except Exception as e:
+                st.error("❌ Error: Check repo name or GitHub token")
+                st.write(e)
 
     else:
         st.warning("⚠️ Please enter a repository name")
+
+# 📌 Footer
+st.markdown("---")
+st.markdown("👨‍💻 Developed using Streamlit + OpenAI + GitHub API")

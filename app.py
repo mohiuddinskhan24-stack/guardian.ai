@@ -59,11 +59,13 @@ Code:
         return response.choices[0].message.content
 
     except Exception:
-        return """
-1. Vulnerability: SQL Injection
-2. Explanation: Unsafe user input used in query
-3. Fix: Use parameterized queries
-"""
+        return(
+            "🔴 Vulnerability: SQL Injection\n"
+            "🟡 Explanation: Unsafe user input in query\n"
+            "🟢 Fix: Use parameterized queries\n"
+            "⚠️ Severity: High"
+        )
+
 
 # 🖥️ UI
 st.title("🔐 AI Security Vulnerability Scanner")
